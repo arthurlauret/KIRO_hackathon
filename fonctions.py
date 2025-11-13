@@ -75,3 +75,18 @@ def cout_total(sol):
     for i in sol:
         total += rental_cost(i)+ fuel_cost(i) + radius_cost(i)
     return total
+
+#Fonction qui construit les listes des temps d'arrivee et de depart de chaque sommet
+import numpy as np
+def arrivees_departs(f, chemin):
+    n = len(chemin)
+    garer = vehicules.loc[f-1]["parking_time"]
+    arrivees = np.zeros(n)
+    departs = np.zeros(n)
+    t = 0 
+    for i in range(1,n-1):
+        arrivees[i] = departs[i-1] + travel_time(f, chemin[i-1], chemin[i], t)
+        departs[i] = max(arrivees[i]+garer, instance.loc[i]["window_start"])+instance.loc[i]["delivery_duration"]
+        t = departs[i]
+    arrivees[n] = departs[i-1] + travel_time(f, chemin[n-1], chemin[n], t)
+    return arrivees, departs

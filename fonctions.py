@@ -23,14 +23,14 @@ def reference_travel_time(f, i, j):
     x2 = instance.loc[j]["longitude"]
     y1 = instance.loc[i]["latitude"]
     y2 = instance.loc[j]["latitude"]
-    sf = vehicules.loc[f]["speed"]
-    pf = vehicules.loc[f]["parking_time"]
+    sf = vehicules.loc[f-1]["speed"]
+    pf = vehicules.loc[f-1]["parking_time"]
     return distanceE((x1,y1), (x2,y2))/sf + pf
 
 def miam(f,t):
     k = 0 
-    a = [vehicules.loc[f]["fourier_cos_0"],vehicules.loc[f]["fourier_cos_1"],vehicules.loc[f]["fourier_cos_2"],vehicules.loc[f]["fourier_cos_3"]]
-    b = [vehicules.loc[f]["fourier_sin_0"],vehicules.loc[f]["fourier_sin_1"],vehicules.loc[f]["fourier_sin_2"],vehicules.loc[f]["fourier_sin_3"]]
+    a = [vehicules.loc[f-1]["fourier_cos_0"],vehicules.loc[f-1]["fourier_cos_1"],vehicules.loc[f-1]["fourier_cos_2"],vehicules.loc[f-1]["fourier_cos_3"]]
+    b = [vehicules.loc[f-1]["fourier_sin_0"],vehicules.loc[f-1]["fourier_sin_1"],vehicules.loc[f-1]["fourier_sin_2"],vehicules.loc[f-1]["fourier_sin_3"]]
     for i in range(4):
         k+= a[i]*cos(i*2*pi/86400*t) + b[i]*sin(i*2*pi/86400 * t)
     return k
@@ -39,10 +39,10 @@ def travel_time(f, i, j, t):
     return reference_travel_time(f, i, j)*miam(f,t)
 
 def rental_cost(route):
-    return vehicules.loc[route[0]]["rental_cost"]
+    return vehicules.loc[route[0]-1]["rental_cost"]
 
 def fuel_cost(route):
-    cout = vehicules.loc[route[0]]["fuel_cost"]
+    cout = vehicules.loc[route[0]-1]["fuel_cost"]
     chemin = route[2]
     k=0
     for i in range(len(chemin)-1):

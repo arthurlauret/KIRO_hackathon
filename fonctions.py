@@ -1,5 +1,4 @@
 from math import *
-from pandas import *
 
 rho = 6.371*10**6
 def convertirLat(phi1, phi2):
@@ -14,4 +13,65 @@ def distanceM(point1, point2):
 def distanceE(point1, point2):
     return sqrt((convertirLon(point1[0], point2[0]))**2+ (convertirLat(point1[1], point2[1]))**2)
 
-vehicules = read_csv("sujet/instances/vehicles.csv")
+
+import pandas as pd
+instance = pd.read_csv("instances/instance_01.csv")
+
+vehicules = pd.read_csv("vehicles.csv")
+def reference_travel_time(f, i, j):
+    x1 = instance.loc[i]["longitude"]
+    x2 = instance.loc[j]["longitude"]
+    y1 = instance.loc[i]["latitude"]
+    y2 = instance.loc[j]["latitude"]
+    sf = vehicules.loc[f]["speed"]
+    pf = vehicules.loc[f]["parking_time"]
+    return distanceE((x1,y1), (x2,y2))/sf + pf
+
+def miam(f,t):
+    k = 0 
+    a = [vehicules.loc[f]["fourier_cos_0"],vehicules.loc[f]["fourier_cos_1"],vehicules.loc[f]["fourier_cos_2"],vehicules.loc[f]["fourier_cos_3"]]
+    b = [vehicules.loc[f]["fourier_sin_0"],vehicules.loc[f]["fourier_sin_1"],vehicules.loc[f]["fourier_sin_2"],vehicules.loc[f]["fourier_sin_3"]]
+    for i in range(4):
+        k+= a[i]*cos(i*2*pi/86400*t) + b[i]*sin(i*2*pi/86400 * t)
+    return k
+
+def travel_time(f, i, j, t):
+    return reference_travel_time(f, i, j)*miam(f,t)
+
+def rental_cost(route):
+    return vehicules.loc[route[0]]["rental_cost"]
+
+def fuel_cost(route):
+    cout = vehicules.loc[route[0]]["fuel_cost"]
+    chemin = route[2]
+    k=0
+    for i in range(len(chemin)-1):
+        x1 = instance.loc[i]["longitude"]
+        x2 = instance.loc[i+1]["longitude"]
+        y1 = instance.loc[i]["latitude"]
+        y2 = instance.loc[i+1]["latitude"]
+        k+= distanceM((x1,y1),(x2,y2))
+    
+    return cout*k
+
+def radius_cost(route):
+    cout = vehicules.loc[route[0]]["radius_cost"]
+    chemin = route[2]
+    maxi = 0
+    for i in range(1,len(chemin)-1):
+        for j in range(1, len(chemin)-1):
+            x1 = instance.loc[i]["longitude"]
+            x2 = instance.loc[j]["longitude"]
+            y1 = instance.loc[i]["latitude"]
+            y2 = instance.loc[j]["latitude"]
+            dist=distanceE((x1,y1),(x2,y2))
+            if dist>maxi:
+                maxi = dist
+
+    return cout*(0.5*maxi)**2
+
+def cout_total(sol):
+    total = 0 
+    for i in sol:
+        total += rental_cost(i)+ fuel_cost(i) + radius_cost(i)
+    return total
